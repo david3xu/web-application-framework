@@ -228,6 +228,102 @@ app.listen(3000, function(){
 });
 ```
 
+### Code Walkthrough
+
+**Step 1 — The Django parallel**
+
+In Django, getting a page working touched three files:
+
+| Django file    | What it did               |
+| -------------- | ------------------------- |
+| `settings.py`  | Project config            |
+| `urls.py`      | Routing                   |
+| `views.py`     | Logic / response          |
+
+Express collapses all three into one file. That is the only structural shift.
+
+---
+
+**Step 2 — What each line does**
+
+| Line | What it means | Django equivalent |
+|------|--------------|-------------------|
+| `const express = require('express');` | "Go get the Express library and call it `express`." | `from django.http import HttpResponse` |
+| `const app = express();` | "Start up a blank Express application and call it `app`. This is our web server." | Handled invisibly by `manage.py` |
+| `app.get('/', function(req, res) { ... })` | "When someone visits `/` using GET, run this function." | A function in `views.py` + a row in `urls.py` — fused together here |
+| `res.send('HelloWorld!!')` | "Write the reply and send it." | `return HttpResponse('HelloWorld!!')` |
+| `app.listen(3000, ...)` | "Open door number 3000 and wait for visitors." | `python manage.py runserver` — except you write it explicitly here |
+
+---
+
+**Step 3 — What are `req` and `res`?**
+
+In the table above, `app.get('/', function(req, res) { ... })` has two parameters. Express fills these in automatically every time a request arrives — you do not provide them yourself.
+
+- **`req`** (request) — frontend → backend. Everything the browser sent to you.
+  - `req.body` → form data the user submitted
+  - `req.params` → values from the URL (e.g. `/posts/1`)
+  - `req.query` → query string values (e.g. `/search?name=john`)
+
+- **`res`** (response) — backend → frontend. The methods you use to send something back.
+  - `res.send('Hello')` → send text or HTML
+  - `res.sendFile(...)` → send a file
+  - `res.status(404).send('Not found')` → send with a status code
+
+The names `req` and `res` are just convention — Express passes the objects in regardless of what you call them. If you never call anything on `res`, the browser waits forever because nothing was sent back.
+
+---
+
+**Step 4 — What breaks if you remove a line?**
+
+
+| Remove this line | What happens |
+|------------------|--------------|
+| `app.listen(3000)` | Nothing crashes — but no one can reach the server. The door was never opened. |
+| `res.send(...)` | The browser spins forever. The request arrived but was never answered. |
+
+Every line has a job. If it is there, it is for a reason.
+
+---
+
+**Step 5 — The callback**
+
+The `function(req, res) { ... }` is passed *into* `app.get()` as an argument. In Python you would never pass a function as a parameter like this — but in JavaScript it is normal and it has a name: a **callback**.
+
+**Why does it exist?**
+
+A web server cannot know in advance *when* a request will arrive. It could be in 1 second or 1 hour. So instead of running your code immediately, you hand Express a function and say: *"Run this whenever a GET `/` request comes in."* Express holds onto it and calls it back at the right moment — hence the name **callback**.
+
+**Normal call vs callback:**
+
+```js
+// Normal — you call the function yourself, right now
+greet();
+
+// Callback — you hand the function to Express, Express calls it later
+app.get('/', function(req, res) {
+    res.send('Hello');
+});
+```
+
+**Why not just run it immediately?**
+
+```js
+// This would run once at startup and never again
+app.get('/', res.send('Hello'));  // ✗ wrong — no function, runs immediately
+
+// This registers the function, waits, runs it on every matching request
+app.get('/', function(req, res) { res.send('Hello'); });  // ✓ correct
+```
+
+**Why is it called a callback?**
+
+The name comes from the direction of control:
+- Normally *you* call a function.
+- With a callback, *you hand the function to someone else*, and they **call you back** when the time is right.
+
+`app.get()` registers the rule now. The function inside runs later — only when a matching request comes in. This pattern appears everywhere in JavaScript, not just Express.
+
 ---
 
 ## Exercise 5 — Running a single file Express app (5 min)
@@ -378,18 +474,11 @@ In a text document, answer the following question:
 - **What is middleware in Express?**
   > Middleware is a function that runs **in between** the request arriving and your route handler running.
   >
-  > Imagine a security guard at a door — every visitor (request) must pass through the guard first before entering the room (your route). The guard can:
-  >
-  > - Let them in ✓
-  > - Turn them away ✗ (e.g. not logged in → send back 401)
-  > - Add information to them (e.g. attach `req.body` so your route can read the form data)
-  >
   > ```
   > Request → [body-parser] → [your route handler] → Response
-  >              (guard)           (the room)
   > ```
   >
-  > `body-parser` is one such guard — it reads the raw form data from the request and attaches it to `req.body` before your route ever sees it. Without it, `req.body` is `undefined` — the envelope arrives but it's still sealed.
+  > `body-parser` reads the raw form data from the request and attaches it to `req.body` before your route ever sees it. Without it, `req.body` is `undefined`.
   >
   > **Code example — without vs with middleware:**
   >
@@ -408,10 +497,10 @@ In a text document, answer the following question:
   > });
   > ```
   >
-  > The only difference is `app.use(bodyParser...)` — that one line puts the guard in place and suddenly `req.body` has data in it.
+  > The only difference is `app.use(bodyParser...)` — that one line registers the middleware and suddenly `req.body` has data in it.
   >
-  > **Is middleware only for security?**
-  > No — security is just one of many things middleware can do. Middleware is any code that runs between the request and the response:
+  > **Is middleware only for body parsing?**
+  > No — it is any code that runs between the request and the response:
   >
   > | Use case                 | Example middleware | What it does                                           |
   > | ------------------------ | ------------------ | ------------------------------------------------------ |
@@ -421,15 +510,7 @@ In a text document, answer the following question:
   > | **Error handling** | custom middleware  | Catches errors and sends a clean response              |
   > | **File uploads**   | `multer`         | Handles uploaded files in a request                    |
   >
-  > Think of it like an airport:
-  >
-  > ```
-  > You (request) → [Check-in] → [Security] → [Boarding] → Plane (route handler)
-  > ```
-  >
-  > Each station is middleware. Security is just one of the stations — not the whole airport.
-  >
-  > **One-liner:** Security is one thing middleware can do. Middleware is really just any code that intercepts a request before it reaches your route.
+  > Each station runs in order, before your route handler sees the request.
   >
 
 In order to read HTTP POST request data, you need to install a middleware module named body-parser. The body-parser middleware extracts the entire body portion of an incoming request stream and exposes it in `req.body`.
@@ -484,7 +565,7 @@ Enter a to-do item through the browser and check your terminal to ensure the pos
 > 1. Ensure `node app.js` or `nodemon app.js` is running.
 > 2. Fill the form in the browser at `http://localhost:3000/`.
 > 3. Press "Add task".
-> 4. Check your Node term inal output (where nodemon is running). You should see `{ taskName: 'Your entered text' }`.
+> 4. Check your Node terminal output (where nodemon is running). You should see `{ taskName: 'Your entered text' }`.
 
 ---
 
