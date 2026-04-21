@@ -47,45 +47,6 @@ The lecture asks the following revision questions. Check your answers before mov
   > }
   > // safe to use req.body here
   > ```
-  >
-  > **How does this actually work?**
-  >
-  > In Python and Java, functions almost always belong to a class. In JavaScript, **a plain object can hold functions directly — no class needed**:
-  >
-  > ```js
-  > // This is just a plain object with functions as values — no class
-  > const Joi = {
-  >   string: function() { return { min: function() {...}, required: function() {...} } },
-  >   object: function() { return { keys: function() {...}, validate: function() {...} } },
-  >   number: function() { return { min: function() {...} } }
-  > };
-  >
-  > // So Joi.string() just calls the function stored at the 'string' key
-  > ```
-  >
-  > This is essentially how Joi is built — it exports a plain object with methods on it. The Python equivalent is a **module**, not a class:
-  >
-  > ```python
-  > # Python — math is a module, not a class
-  > import math
-  > math.sqrt(4)    # calling a function on a module
-  > ```
-  >
-  > ```js
-  > // JavaScript equivalent
-  > const Joi = require('joi')
-  > Joi.string()    // calling a function on an object/module
-  > ```
-  >
-  > In JavaScript there are three ways functions can exist:
-  >
-  > | Where | Example | Needs `new`? |
-  > |-------|---------|-------------|
-  > | Standalone | `function greet() {}` | No |
-  > | On a plain object | `Joi.string()` | No |
-  > | On a class | `new Post()` | Yes |
-  >
-  > Joi uses the middle one — a plain object acting as a namespace. The chaining `Joi.string().min(3).required()` works because each method returns the same rule object back, letting you keep adding rules to it. `schema` is just the plain object that `Joi.object().keys({...})` hands back — it is not a class instance, just an object with a `.validate()` method on it.
 
 - **What do we need body-parser?**
   > When a user submits an HTML form, the data is sent inside the body of the HTTP POST request. Express cannot read that data by default — `req.body` is `undefined`. body-parser is middleware that reads the body and attaches the parsed data to `req.body` so your route handlers can use it.
@@ -105,101 +66,125 @@ The lecture asks the following revision questions. Check your answers before mov
   > });
   > ```
 
-### JavaScript vs Python vs Java — why JavaScript works differently
-
-The plain object pattern you just saw in Joi is not a quirk of that library — it reflects a core design decision in JavaScript itself. Understanding this will help you read any JavaScript code, not just this unit.
-
-**Why JavaScript uses plain objects instead of forcing classes:**
-
-JavaScript was created in 1995 for the browser, designed in 10 days. The goal was a lightweight scripting language, not enterprise OOP. It chose a **prototype-based** object model instead of a class-based one — meaning objects are just dictionaries that can hold anything: functions, classes, numbers, or other objects. There is no rule that functions must live inside a class.
-
-Python sits in between — it has classes but also allows standalone functions and module-level code. Java enforces that everything belongs to a class.
-
-**The main differences across the three languages:**
-
-| Feature | Java | Python | JavaScript |
-|---------|------|--------|------------|
-| **Object model** | Class-based — everything must be in a class | Class-based but flexible — standalone functions allowed | Prototype-based — objects are dictionaries, classes are optional |
-| **Typing** | Static — types declared, checked at compile time | Dynamic — types checked at runtime | Dynamic + weak — types checked at runtime AND coerced silently |
-| **Functions** | Methods only — must belong to a class | First-class — functions are objects, can be passed around | First-class — functions are objects, central to the language |
-| **Where it runs** | JVM (compiled to bytecode) | Interpreter | Browser originally, server via Node.js |
-| **Concurrency** | Multi-threaded | Single thread + GIL limits true parallelism | Single-threaded event loop — async via callbacks/Promises/await |
-| **Module system** | `import` brings class names into scope | `import` gives you the module object | `require()` gives you whatever `module.exports` was set to |
-
-**The one that trips students up most — weak typing:**
-
-Python and Java throw an error if you mix incompatible types. JavaScript tries to "help" by silently converting types, which produces surprising results:
-
-```js
-// JavaScript silently coerces types — no error thrown
-"5" + 1       // "51"  — number became a string
-"5" - 1       // 4     — string became a number
-0 == false    // true  — loose equality coerces types
-0 === false   // false — strict equality does not (always use === in JavaScript)
-```
-
-**Is prototype-based design still relevant today?**
-
-Yes — but JavaScript has been adding class syntax since ES6 (2015) to look more familiar:
-
-```js
-// ES6 class syntax — looks like Java/Python
-class Post {
-  constructor(title) { this.title = title; }
-  save() { ... }
-}
-```
-
-Under the hood this is still prototypes — `class` is syntactic sugar over the same mechanism. TypeScript goes further and adds static typing on top, making JavaScript feel closer to Java. So the language is absorbing features from both worlds, but its prototype roots still show up everywhere — which is why Joi, Express, and Mongoose all use plain objects as their public API.
-
 ---
 
-### What does `require()` actually return?
+## Where You Should Be Starting — Week 6 Final State
 
-You have used `require()` since Week 6 without thinking about it. It is worth understanding — because a library can export anything it wants: a plain object, a function, or a class. What it exports determines how you use it.
+This section shows the **exact state your project should be in at the end of Week 6**. Before starting Exercise 1, verify your EasyToDo app matches the files below. If anything is missing, complete it first — every exercise this week builds directly on this foundation.
 
-The Python equivalent is `import` — but `import` always gives you a module. In JavaScript, `require()` gives you **whatever the library chose to export**, which varies per library. You can see this by looking at what each library actually puts in `module.exports`:
+### Project structure
 
-```js
-// Inside mongoose — exports a plain object
-module.exports = {
-  connect: function() {...},
-  Schema: class Schema {...},
-  model: function() {...}
-}
-// So: const mongoose = require('mongoose') → you get that plain object
-
-// Inside express — exports a function
-module.exports = function express() {
-  return { get: function(){...}, post: function(){...}, listen: function(){...} }
-}
-// So: const express = require('express') → you get that function
-//     const app = express()              → calling it gives you the app object
+```
+EasyToDo/
+├── node_modules/          ← created by `npm install`, do not edit
+├── package.json           ← tracks your dependencies
+├── package-lock.json      ← auto-generated, do not edit
+├── app.js                 ← your Express server
+└── index.html             ← the page served at GET /
 ```
 
-That is why `mongoose` and `express` feel different even though both come from `require()`:
+### Dependencies installed
 
-| `require(...)` | What it exports | How you use it |
-|----------------|-----------------|----------------|
-| `require('express')` | A **function** | Call it: `const app = express()` |
-| `require('mongoose')` | A **plain object** | Use directly: `mongoose.connect(...)` |
-| `require('body-parser')` | A **plain object** | Use directly: `bodyParser.urlencoded(...)` |
-| `require('joi')` | A **plain object** | Use directly: `Joi.string()` |
+Your `package.json` should have the following dependencies (exact versions may differ):
 
-The pattern to recognise: if `require()` gives you a function, call it to get the thing you actually use. If it gives you a plain object, use it directly.
+```json
+{
+  "name": "easytodo",
+  "version": "1.0.0",
+  "main": "app.js",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2"
+  }
+}
+```
 
----
+Plus `nodemon` installed globally for auto-restart:
 
-### What the Week 6 EasyToDo app could do
+```bash
+[user@pc]$ npm install -g nodemon
+```
 
-By the end of Week 6 your app:
+### Final `app.js` from Week 6
 
-- Served `index.html` as a static file (`GET /`)
-- Received form submissions via `POST /todos` and logged them to the terminal
-- Used body-parser to read `req.body`
-- Reloaded automatically with nodemon
+```js
+// --- Imports ---
+const express = require('express');
+const bodyParser = require('body-parser');
 
-What it **could not** do: store anything permanently. Every server restart wiped all data. Week 7 fixes that.
+// --- App setup ---
+const app = express();
+
+// --- Middleware ---
+// body-parser reads form submissions from POST requests and attaches them to req.body
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// --- Routes ---
+// GET / → send the static HTML file
+app.get('/', function(req, res) {
+  res.sendFile(__dirname + '/index.html');
+});
+
+// POST /todos → handle the form submission
+app.post('/todos', function(req, res) {
+  console.log(req.body); // e.g. { taskName: 'finish prac 4' }
+  res.send('Task received — check terminal!');
+});
+
+// --- Start server ---
+app.listen(3000, function() {
+  console.log('Listening on port 3000');
+});
+```
+
+### Final `index.html` from Week 6
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EasyTodo</title>
+</head>
+<body>
+    <h1>EasyTodo</h1>
+    <form action="/todos" method="POST">
+        <input type="text" name="taskName" placeholder="e.g., finish prac 4">
+        <button type="submit">Add task</button>
+    </form>
+</body>
+</html>
+```
+
+### What this app currently does
+
+- `GET /` serves `index.html` — the form page
+- `POST /todos` receives the form submission and logs it to the terminal
+- Nothing is saved — every server restart wipes any data that was entered
+
+### Verify before continuing
+
+Run your app:
+
+```bash
+[user@pc]$ nodemon app.js
+```
+
+Visit `http://localhost:3000/`, enter a task, and click "Add task". You should see the task object printed in your terminal, e.g. `{ taskName: 'finish prac 4' }`. If that works, you are ready to start Week 7.
+
+### If you need to rebuild from scratch
+
+If you don't have the Week 6 app, run the following from an empty folder:
+
+```bash
+[user@pc]$ mkdir EasyToDo && cd EasyToDo
+[user@pc]$ npm init -y
+[user@pc]$ npm install express body-parser
+[user@pc]$ npm install -g nodemon
+[user@pc]$ touch app.js index.html
+```
+
+Then paste the `app.js` and `index.html` contents shown above into the two files.
 
 ---
 
@@ -207,7 +192,7 @@ What it **could not** do: store anything permanently. Every server restart wiped
 
 ### Where we are
 
-In Week 6 you built a basic Express server that receives form data and serves a static HTML file. The full picture looked like this:
+At the end of Week 6, your app looked like this:
 
 ```
 Browser
@@ -331,8 +316,6 @@ Keep this — you will paste it into your code in Exercise 2.
 > **Concept:** Your database exists in the cloud but your Express app doesn't know about it yet. **Mongoose** is the bridge — it opens a persistent connection from your app to Atlas when the server starts, and stays connected for the lifetime of the process.
 >
 > Mongoose also gives you a cleaner API than raw MongoDB queries. Instead of writing low-level database commands, you work with JavaScript objects and methods. In the architecture diagram, Mongoose sits between Express and Atlas.
->
-> The `.then() / .catch()` pattern here is **asynchronous** — the database connection happens in the background. Your app doesn't freeze waiting for it; it just logs a message when it succeeds or fails.
 
 Install Mongoose:
 
@@ -381,14 +364,40 @@ mongoose.connect('mongodb+srv://...')   // returns a Promise (the receipt)
   .catch(err => console.error(err));    // called when connection fails
 ```
 
-A Promise is a plain object with `.then()` and `.catch()` as its methods. Each returns the same Promise back — which is why you can chain them. This looks like Joi chaining but the purpose is different:
+### Your `app.js` should now look like this
 
-```
-Joi chaining     → builds up a ruleset step by step (each call adds a rule)
-Promise chaining → handles what happens next (success path or failure path)
-```
+```js
+// --- Imports ---
+const express = require('express');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
-In Python, the equivalent is `async/await` — JavaScript has that too, and you will see it used in later exercises with `await Todo.find({})` instead of `.then()`. Both do the same thing: wait for an async operation without freezing the rest of the app.
+// --- App setup ---
+const app = express();
+
+// --- Database connection ---
+mongoose.connect('mongodb+srv://<username>:<password>@<clusterURL>/<database>')
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('Could not connect to MongoDB', err));
+
+// --- Middleware ---
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// --- Routes ---
+app.get('/', function(req, res) {
+  res.sendFile(__dirname + '/index.html');
+});
+
+app.post('/todos', function(req, res) {
+  console.log(req.body);
+  res.send('Task received — check terminal!');
+});
+
+// --- Start server ---
+app.listen(3000, function() {
+  console.log('Listening on port 3000');
+});
+```
 
 ---
 
@@ -406,13 +415,18 @@ In Python, the equivalent is `async/await` — JavaScript has that too, and you 
 
 ### Step 1 — Define the Schema
 
-Outside any route handlers in `app.js`, add:
+In `app.js`, after your `mongoose.connect(...)` call and before any route handlers, add:
 
 ```js
+// --- Schema & Model ---
 const todoSchema = new mongoose.Schema({
   taskName: String
 });
+
+const Todo = mongoose.model('Todo', todoSchema);
 ```
+
+`Todo` is now a class. Every time you want to create a new to-do in the database, you create an instance of `Todo`.
 
 > **Django parallel:**
 >
@@ -421,47 +435,6 @@ const todoSchema = new mongoose.Schema({
 > | `class Todo(models.Model):` | `const todoSchema = new mongoose.Schema({...})` |
 > | `taskName = models.CharField(max_length=200)` | `taskName: String` |
 > | `python manage.py makemigrations && migrate` | *(no migration step — MongoDB handles it automatically)* |
-
-### Step 2 — Compile the Model
-
-```js
-const Todo = mongoose.model('Todo', todoSchema);
-```
-
-`Todo` is now a class. Every time you want to create a new to-do in the database, you create an instance of `Todo`.
-
-**Why does `mongoose` use both patterns — plain object AND `new`?**
-
-This is the same `mongoose` object from `require('mongoose')`, yet some things use `new` and some don't. The reason becomes clear when you look at what mongoose actually stores on itself:
-
-```js
-// Inside mongoose (simplified):
-const mongoose = {
-  connect: function() {...},       // plain function — stored as a value
-  Schema: class Schema {...},      // a CLASS — stored as a value
-  model: function(name, schema) {  // plain function that returns a class
-    return class Model {...}
-  }
-}
-```
-
-A JavaScript object can store **anything** as a value — a plain function, a class, a number, another object. `mongoose.Schema` just happens to be a class stored on the object, not a plain function. That is why it needs `new`:
-
-```js
-mongoose.connect(...)           // calling a plain function — no new
-new mongoose.Schema({...})      // calling a CLASS constructor — needs new
-mongoose.model('Todo', schema)  // calling a plain function — no new
-new Todo({...})                 // Todo IS the class model() returned — needs new
-```
-
-| Call | What is stored at that key | Needs `new`? |
-|------|---------------------------|--------------|
-| `mongoose.connect()` | A plain function | No |
-| `mongoose.Schema` | A class | Yes |
-| `mongoose.model()` | A plain function that returns a class | No — but use `new` on what it returns |
-| `new Todo({...})` | The class returned by `model()` | Yes |
-
-The rule: **`new` is only needed when you are calling a class constructor**. If it is a plain function, just call it normally.
 
 ### Understanding schema enforcement
 
@@ -519,14 +492,13 @@ app.post('/todos', async function(req, res) {
 | `await todo.save()` | Sends the document to Atlas — waits until the write is confirmed |
 | `res.redirect('/')` | Sends the user back to the homepage once saving is complete |
 
-Make sure `body-parser` is registered before this route (from Week 6):
+Make sure `body-parser` is registered before this route (carried over from Week 6):
 
 ```js
-const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
 ```
 
-**Verify it works:** Add a task in the browser, then open your MongoDB Atlas dashboard → **Database → Browse Collections**. You should see the document appear.
+**Verify it works:** Add a task in the browser, then open your MongoDB Atlas dashboard → **Database → Browse Collections**. You should see the document appear with an auto-generated `_id`.
 
 ---
 
@@ -612,6 +584,8 @@ app.get('/', async function(req, res) {
 
 Open http://localhost:3000/ — your stored to-dos should appear below the form.
 
+> **You can now delete the old `index.html` file from your project root** — it is no longer used. The Pug template in `views/index.pug` replaces it.
+
 ---
 
 > **To-dos are displaying. But the template references `/css/todo.css` and `/js/main.js` — files Express doesn't know where to find yet. Next: tell Express where static files live.**
@@ -640,6 +614,8 @@ Any file you place inside `public/` is now accessible by URL:
 |--------------|----------------|
 | `public/css/todo.css` | `/css/todo.css` |
 | `public/js/main.js` | `/js/main.js` |
+
+You can leave `todo.css` empty for now (or add simple styling), but `main.js` will be populated in the next exercise.
 
 ---
 
@@ -770,6 +746,86 @@ Consider: what extra field would you need to add to your `todoSchema`? How would
 
 ---
 
+## Final `app.js` — Week 7 Complete State
+
+After finishing Exercises 1–7, your `app.js` should look like this:
+
+```js
+// --- Imports ---
+const express = require('express');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+
+// --- App setup ---
+const app = express();
+
+// --- Database connection ---
+mongoose.connect('mongodb+srv://<username>:<password>@<clusterURL>/<database>')
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('Could not connect to MongoDB', err));
+
+// --- Schema & Model ---
+const todoSchema = new mongoose.Schema({
+  taskName: String
+});
+
+const Todo = mongoose.model('Todo', todoSchema);
+
+// --- Middleware ---
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static('public'));
+
+// --- View engine ---
+app.set('view engine', 'pug');
+
+// --- Routes ---
+// READ — show all to-dos
+app.get('/', async function(req, res) {
+  const todos = await Todo.find({});
+  console.log(todos);
+  res.render('index', { toDoList: todos });
+});
+
+// CREATE — save a new to-do
+app.post('/todos', async function(req, res) {
+  const todo = new Todo({
+    taskName: req.body.taskName
+  });
+  await todo.save();
+  res.redirect('/');
+});
+
+// DELETE — remove a to-do by id
+app.delete('/todos/:id', async function(req, res) {
+  await Todo.deleteOne({ _id: mongoose.Types.ObjectId(req.params.id) });
+  res.redirect('/');
+});
+
+// --- Start server ---
+app.listen(3000, function() {
+  console.log('Listening on port 3000');
+});
+```
+
+### Final project structure
+
+```
+EasyToDo/
+├── node_modules/
+├── package.json
+├── package-lock.json
+├── app.js
+├── views/
+│   └── index.pug
+└── public/
+    ├── css/
+    │   └── todo.css
+    └── js/
+        └── main.js
+```
+
+---
+
 ## Concept Reference
 
 ### 1. The complete request flow (Week 7)
@@ -780,7 +836,7 @@ Browser sends GET /
   ▼
 Express receives request
   │
-  ├── Middleware runs first (body-parser, express.static, passport)
+  ├── Middleware runs first (body-parser, express.static)
   │
   ▼
 app.get('/') handler
