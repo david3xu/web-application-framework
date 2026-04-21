@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>One-Page Portfolio</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="#">My Portfolio</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="#about">About</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#experience">Experience</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#contact">Contact</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Lead Paragraph / Header -->
+  <div class="bg-light py-5">
+    <div class="container text-center">
+      <h1 class="display-4">Welcome to my Portfolio</h1>
+      <p class="lead">I am an aspiring web developer passionate about front-end and back-end integration, using frameworks like Django and Bootstrap to build responsive and user-friendly applications.</p>
+    </div>
+  </div>
+
+  <div class="container mt-5">
+
+    <!-- Biography Section -->
+    <div id="about" class="row mb-5 align-items-center">
+      <div class="col-md-4 text-center mb-3 mb-md-0">
+        <img src="https://via.placeholder.com/300" class="img-fluid rounded-circle shadow" alt="Profile Picture">
+      </div>
+      <div class="col-md-8">
+        <h2>About Me</h2>
+        <p>Hello! I am currently studying Web Application Frameworks at Curtin University. My background involves programming in Python and JavaScript, and solving complex problems with modern technologies.</p>
+        <p>I enjoy creating interactive experiences on the web. In my free time, I like to explore new web technologies and improve my design skills.</p>
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- Experience Section -->
+    <div id="experience" class="row my-5">
+      <div class="col-12">
+        <h2 class="mb-4">Experience & Projects</h2>
+        
+        <div class="card mb-4 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">Django Web Store</h5>
+            <h6 class="card-subtitle mb-2 text-muted">A full-stack project using Django</h6>
+            <p class="card-text">Developing an e-commerce platform incorporating product listings, a shopping cart, and a user authentication system. Focused on backend logic and database models.</p>
+          </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">Bootstrap Portfolio Website</h5>
+            <h6 class="card-subtitle mb-2 text-muted">A responsive front-end challenge</h6>
+            <p class="card-text">Built this one-page interactive website to showcase responsive grid layouts and built-in Bootstrap components for better UX, exactly as required by the Week 5 practical.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- Contact Form Section -->
+    <div id="contact" class="row my-5">
+      <div class="col-md-8 mx-auto">
+        <h2 class="text-center mb-4">Contact Me</h2>
+        <form>
+          <div class="mb-3">
+            <label for="inputName" class="form-label">Name</label>
+            <input type="text" class="form-control" id="inputName" placeholder="Your Name">
+          </div>
+          <div class="mb-3">
+            <label for="inputEmail" class="form-label">Email address</label>
+            <input type="email" class="form-control" id="inputEmail" placeholder="name@example.com">
+          </div>
+          <div class="mb-3">
+            <label for="inputMessage" class="form-label">Message</label>
+            <textarea class="form-control" id="inputMessage" rows="4" placeholder="Let me know how I can help!"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Send Message</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white text-center py-3">
+    <p class="mb-0">&copy; 2025 Curtin University Student Portfolio.</p>
+  </footer>
+
+  <!-- Bootstrap JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+</body>
+</html>
