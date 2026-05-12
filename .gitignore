@@ -30,3 +30,9 @@ temp/
 # OS
 .DS_Store
 Thumbs.db
+
+# Node
+node_modules/
+build/
+npm-debug.log*
+.env*.local
