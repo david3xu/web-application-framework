@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+  <head><title>Publisher</title></head>
+  <body>
+    <h1>Publish a message</h1>
+    <input id="msg" type="text" placeholder="Type a message" />
+    <button id="send">Publish</button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      document.getElementById("send").addEventListener("click", () => {
+        const text = document.getElementById("msg").value;
+        socket.emit("publish_message", text);
+      });
+    </script>
+  </body>
+</html>

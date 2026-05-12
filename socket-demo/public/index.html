@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+  <head><title>Subscriber</title></head>
+  <body>
+    <h1>News feed</h1>
+    <ul id="feed"></ul>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const feed = document.getElementById("feed");
+
+      socket.on("news_update", (payload) => {
+        const item = document.createElement("li");
+        item.textContent = payload;
+        feed.appendChild(item);
+      });
+    </script>
+  </body>
+</html>
